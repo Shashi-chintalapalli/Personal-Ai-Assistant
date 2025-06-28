@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize Cohere client
-api_key = os.getenv("COHERE_API_KEY")
-co = cohere.Client(api_key)
+co = cohere.Client("CV9oorwaFIT3iKABnIVn7C0m6YXqfsBXL4RJoW8i")
 
 def get_gpt_reply(prompt: str) -> str:
     """
