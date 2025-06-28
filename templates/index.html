@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Assistant</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 🔝 Top Menu Bar */
+    .top-bar {
+      width: 100%;
+      background-color: #1e1e1e;
+      padding: 10px 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 14px;
+      border-bottom: 1px solid #333;
+    }
+
+    .top-bar .left,
+    .top-bar .right {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .top-bar a {
+      color: #03dac6;
+      text-decoration: none;
+    }
+
+    .container {
+      background-color: #1e1e1e;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+      width: 90%;
+      max-width: 600px;
+      margin-top: 20px;
+    }
+
+    #chatlog {
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #2c2c2c;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background-color: #333;
+      color: white;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      background-color: #03dac6;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #00bfa5;
+    }
+
+    @media (max-width: 600px) {
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🔝 Top Profile Info Bar -->
+  <div class="top-bar">
+    <div class="left">
+      <strong>SHASHI KUMAR REDDY CHINTALAPALLI</strong>
+      <span>📞 +91 9603808379</span>
+      <span>📧 shashi.chintalapalli@gmail.com</span>
+    </div>
+    <div class="right">
+      <a href="https://www.linkedin.com/in/shashi-chintalapalli/" target="_blank">🔗 LinkedIn</a>
+      <a href="https://shashi-chintalapalli.github.io/" target="_blank">🌐 Portfolio</a>
+      <span>📍 Hyderabad</span>
+    </div>
+  </div>
+
+  <!-- 🧠 Assistant UI -->
+  <div class="container">
+    <h2>🧠 AI Assistant</h2>
+    <div id="chatlog"></div>
+
+    <div class="input-area">
+      <input type="text" id="user-input" placeholder="Ask me anything..." />
+      <button onclick="sendText()">Send</button>
+      <button id="mic-btn">🎤</button>
+    </div>
+  </div>
+
+  <script>
+    const chatlog = document.getElementById("chatlog");
+    const inputBox = document.getElementById("user-input");
+    const micButton = document.getElementById("mic-btn");
+
+    function appendMessage(sender, message) {
+      const msg = document.createElement("div");
+      msg.innerHTML = `<strong>${sender}:</strong> ${message}`;
+      chatlog.appendChild(msg);
+      chatlog.scrollTop = chatlog.scrollHeight;
+    }
+
+    function speakText(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      speechSynthesis.speak(utterance);
+    }
+
+    function sendText() {
+      const text = inputBox.value;
+      if (!text) return;
+
+      appendMessage("You", text);
+      inputBox.value = "";
+
+      fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: text })
+      })
+      .then(res => res.json())
+      .then(data => {
+        appendMessage("Assistant", data.response);
+        speakText(data.response);
+      })
+      .catch(err => {
+        appendMessage("Error", "Something went wrong!");
+      });
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+
+    micButton.addEventListener("click", () => {
+      recognition.start();
+    });
+
+    recognition.onresult = function(event) {
+      const transcript = event.results[0][0].transcript;
+      inputBox.value = transcript;
+      sendText(); // auto-send after voice
+    };
+
+    recognition.onerror = function(event) {
+      alert("Mic error: " + event.error);
+    };
+  </script>
+</body>
+</html>
